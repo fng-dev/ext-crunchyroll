@@ -1,10 +1,10 @@
 .netanime-side-menu {
     width: 250px;
     height: 400px;
-    background-color: #1f1f20;
+    background-color: #23252b;
     position: fixed;
     right: 0px;
-    top: 100px;
+    top: 60px;
     border-radius: 0 5px 5px 5px;
     border: 2px solid #000;
     transform: translateX(100%);
@@ -19,6 +19,17 @@
     overflow: auto;
     height: 350px;
     width: 100%;
+}
+
+.netanime-side-menu .container::-webkit-scrollbar {
+    width: 7px;
+}
+.netanime-side-menu .container::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 6px;
+}
+.netanime-side-menu .container::-webkit-scrollbar-thumb:hover {
+    background-color: #555;
 }
 
 .netanime-side-menu button {

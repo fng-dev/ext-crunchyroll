@@ -24,3 +24,16 @@ const _getPageData = () => {
 
   return false;
 };
+const _getAnimeHomePage = () => {
+  const animeName = document.querySelector(".hero-heading-line>h1");
+
+  if (animeName) {
+    const animeData = {
+      animeName: animeName.textContent,
+    };
+
+    return animeData;
+  }
+
+  return false;
+};

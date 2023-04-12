@@ -92,7 +92,19 @@ const observer = new MutationObserver((mutation) => {
     ITEMS = DB.episodes.filter((item) => item.anime_id === ANIME.id);
   }
 
-  if (pathName.indexOf("watch") === -1) {
+  if (pathName.indexOf("series") !== -1) {
+    const animeHomePage = _getAnimeHomePage();
+    if (animeHomePage) {
+      const anime = DB.animes.find(
+        (item) => item.name === animeHomePage.animeName
+      );
+      if (anime) {
+        ITEMS = DB.episodes.filter((item) => item.anime_id === anime.id);
+      }
+    }
+  }
+
+  if (pathName.indexOf("watch") === -1 && pathName.indexOf("series") === -1) {
     ITEMS = DB.animes;
   }
 
