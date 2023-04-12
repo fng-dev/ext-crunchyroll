@@ -1,16 +1,15 @@
 {
-    "name": "Netnimes",
-    "description": "Entension to simulate a streaming website.",
+    "name": "FnG Crunchyroll",
+    "description": "Entension to save episodes.",
     "version": "0.0.1",
     "manifest_version": 3,
     "permissions": ["storage", "scripting"],
     "web_accessible_resources": [{
         "resources": ["menu.svg"],
-        "matches": ["chrome-extension://dccmijfijggdeodgldgfedpkiaobodmo/*"],
         "use_dynamic_url": true
     }],
     "content_scripts": [{
-        "matches": ["https://yayanimes.net/*"],
+        "matches": ["https://www.crunchyroll.com/*", "https://crunchyroll.com/*"],
         "css": [
             "src/assets/css/_global.css",
             "src/assets/css/toast.css"
@@ -18,10 +17,9 @@
         "js": [
             "src/vendor/moment/moment.min.js",
             "src/vendor/toast/toast.min.js",
-            "src/utils.js",
+            "src/helpers.js",
             "src/images.js",
-            "src/session.js",
-            "src/url.js",
+            "src/database.js",
             "src/html-components.js",
             "src/content-script.js"
         ]

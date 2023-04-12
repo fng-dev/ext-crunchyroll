@@ -1,123 +1,59 @@
-const _createLastEpisodeInfo = (anime) => {
-    const divStyles = {
-        width: 'auto',
-        padding: '10px 20px',
-        position: 'fixed',
-        right: '100px',
-        top: '100px',
-        backgroundColor: '#FFF',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        zIndex: 1000,
-        fontWeight: 'bold',
-        borderRadius: '10px',
-        border: "3px solid orange",
-        transition: '.3s ease'
+let TOTAL_ITEMS = 0;
+let MENU_ITEM = null;
+const _createSideMenu = async (ITEMS) => {
+  const isMenuCreated = document.querySelector(".netanime-side-menu");
+
+  if (!isMenuCreated) {
+    const menu = document.createElement("div");
+    menu.classList.add("netanime-side-menu");
+
+    const outMenu = document.createElement("div");
+    outMenu.classList.add("netanime-side-menu-item");
+
+    outMenu.addEventListener("click", () => {
+      menu.classList.toggle("open");
+    });
+
+    const image = document.createElement("img");
+    image.src = MENU_IMG;
+
+    outMenu.appendChild(image);
+
+    const menuitem = document.createElement("div");
+    menuitem.classList.add("container");
+
+    menu.appendChild(menuitem);
+    menu.appendChild(outMenu);
+
+    MENU_ITEM = menuitem;
+
+    document.body.appendChild(menu);
+  }
+
+  if (isMenuCreated) {
+    if (ITEMS.length !== TOTAL_ITEMS) {
+      TOTAL_ITEMS = ITEMS.length;
+      document
+        .querySelectorAll(".btn-extension-fng")
+        .forEach((e) => e.remove());
+      for (const item of ITEMS) {
+        const btn = _createButton(item.name, item.url);
+        MENU_ITEM.appendChild(btn);
+      }
     }
+  }
 
-    const lastEpisode = getLastEpisode(anime)
+  return false;
+};
 
-    if (lastEpisode) {
-        const epiInfo = document.createElement('div')
-        const link = document.createElement('a')
-        link.style.color = 'orange'
-        link.style.fontWeight = 'bold'
-        link.innerText = `O ultimo episodio assistido foi: ${lastEpisode.anime}-${lastEpisode.episode}`
-        link.href = `https://yayanimes.net/${lastEpisode.anime}-${lastEpisode.episode}`
-        epiInfo.appendChild(link)
-        Object.keys(divStyles).forEach((key) => {
-            epiInfo.style[key] = divStyles[key];
-        })
-
-        document.body.appendChild(epiInfo)
-
-        setTimeout(() => {
-            epiInfo.style.opacity = 0;
-        }, 5000)
-
-        return { el: epiInfo, lastEpisode };
-    }
-
-    return false
-}
-
-const _createSideMenu = async(episodes) => {
-
-    const animesGrouped = await getAllEpisodesGrouped();
-
-    const menu = document.createElement('div');
-    menu.classList.add('netanime-side-menu');
-
-    const outMenu = document.createElement('div')
-    outMenu.classList.add('netanime-side-menu-item')
-
-    outMenu.addEventListener('click', () => {
-        menu.classList.toggle('open')
-    })
-
-    const image = document.createElement('img')
-    image.src = MENU_IMG
-
-    outMenu.appendChild(image)
-
-    const menuitem = document.createElement('div')
-    menuitem.classList.add('container')
-
-    if (window.location.pathname === '/') {
-        if (Object.keys(animesGrouped).length > 0) {
-            Object.keys(animesGrouped).forEach((key) => {
-                const button = document.createElement('button')
-                button.style.textTransform = 'capitalize'
-                const animeName = animesGrouped[key][0].name.split('-').join(' ');
-                const textButton = document.createTextNode(animeName);
-                button.appendChild(textButton)
-                button.addEventListener('click', () => {
-                    window.location.href = `https://yayanimes.net/${animesGrouped[key][0].name}`
-                })
-                menuitem.appendChild(button)
-            })
-        }
-    } else {
-        const fullscreenButton = document.createElement('button')
-        const fullscreenTextButton = document.createTextNode('Fullscreen');
-        fullscreenButton.appendChild(fullscreenTextButton)
-        fullscreenButton.addEventListener('click', () => {
-            const wrapper = document.querySelector('.jw-wrapper')
-            if (wrapper) {
-                _setPlayerFullPage(wrapper)
-                const fullscreen = parseInt(sessionStorage.getItem('fullscreen'));
-                console.log(fullscreen)
-                sessionStorage.setItem('fullscreen', isNaN(fullscreen) ? 1 : 0)
-            } else {
-                console.log('Call Toast')
-                new Toast({
-                    message: 'A funcao fullscreen so esta disponivel para paginas com episodios',
-                    type: 'danger'
-                });
-            }
-        })
-
-        menuitem.appendChild(fullscreenButton)
-
-        if (episodes) {
-            episodes.sort(sortByEpisodeDesc)
-
-            episodes.forEach((epi) => {
-                const button = document.createElement('button')
-                button.style.textTransform = 'capitalize'
-                const animeName = epi.name.split('-').join(' ');
-                const textButton = document.createTextNode(animeName + ' ' + epi.episode);
-                button.appendChild(textButton)
-                button.addEventListener('click', () => {
-                    window.location.href = `https://yayanimes.net/${epi.anime}-${epi.episode}`
-                })
-                menuitem.appendChild(button)
-            })
-        }
-    }
-    menu.appendChild(menuitem)
-    menu.appendChild(outMenu)
-
-    document.body.appendChild(menu)
-}
+const _createButton = (text = "", url) => {
+  const button = document.createElement("button");
+  button.style.textTransform = "capitalize";
+  button.className = "btn-extension-fng";
+  const textButton = document.createTextNode(text.toLowerCase());
+  button.appendChild(textButton);
+  button.addEventListener("click", () => {
+    window.location.href = `https://www.crunchyroll.com${url}`;
+  });
+  return button;
+};

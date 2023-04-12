@@ -1,114 +1,102 @@
-let UPDATE_STORAGE_TIME = 20;
-let REDIRECT_END_TIME = 20;
-let INIT_VIDEO_TIME = 210;
-
-createSession();
-
-
-const initEpisode = async() => {
-    chrome.storage.sync.get((result) => console.log(result))
-    const EPISODE = await getEpisodeByUrl()
-    let video = null
-    let attempts = 0;
-
-    while (video === null && attempts !== 5) {
-        video = document.querySelector('video');
-        await delay(200)
-        attempts++;
-    }
-
-    let episodes = []
-    if (EPISODE) {
-        if (EPISODE.name !== '') {
-            episodes = await getEpisodesByAnime(EPISODE.name)
-        } else {
-            const name = getNameAnimeByUrl();
-            episodes = await getEpisodesByAnime(name)
-        }
-    }
-
-    _createSideMenu(episodes)
-
-    if (video) {
-        const STORAGE_EPISODE = await getEpisode(EPISODE.anime, EPISODE.episode)
-
-
-
-        if (parseInt(sessionStorage.getItem('fullscreen')) === 1) {
-            const wrapper = document.querySelector('.jw-wrapper')
-            _setPlayerFullPage(wrapper)
-        }
-
-        video.play()
-
-        if (STORAGE_EPISODE) {
-            video.currentTime = STORAGE_EPISODE.currentTime
-        } else {
-            let checkSkip = setInterval(() => {
-                const skip = document.querySelector('.skiab')
-                if (skip) {
-                    skip.click()
-                    console.log('Skip Clicked')
-                    clearInterval(checkSkip)
-                    checkSkip = null
-                } else {
-                    console.log('Skip Not Found')
-                }
-            }, 5000)
-        }
-
-        let updated_at = 0;
-        let redirect = false
-        video.addEventListener('timeupdate', () => {
-            if (updated_at < (video.currentTime - UPDATE_STORAGE_TIME)) {
-                const episodio = {
-                    anime: EPISODE.anime,
-                    duration: video.duration,
-                    currentTime: video.currentTime,
-                    episode: EPISODE.episode,
-                    name: EPISODE.name
-                }
-                setEpisode(episodio)
-                updated_at = video.currentTime
-            }
-
-            if ((video.duration - video.currentTime) < REDIRECT_END_TIME && !redirect) {
-                redirect = true
-                const nextEpi = parseInt(EPISODE.episode) + 1;
-                window.location.href = `https://yayanimes.net/${EPISODE.anime}-${nextEpi}`
-            }
-        })
-    } else {
-        const elements = document.querySelectorAll('.nome-thumb');
-        if (episodes) {
-            elements.forEach((el) => {
-                const thumbEpi = el.querySelector('.thumb');
-                const epiNumber = el.querySelector('.num-episodio');
-                epiNumber.style.bottom = '20px'
-                const number = epiNumber.textContent.split(' ')[1];
-                const epi = episodes.find((epi) => epi.episode === number)
-                if (epi) {
-                    const percentage = epi.currentTime * 100 / epi.duration
-
-                    const barraTempo = document.createElement('div');
-                    barraTempo.style.width = '100%'
-                    barraTempo.style.height = '10px'
-                    barraTempo.style.position = 'absolute'
-                    barraTempo.style.backgroundColor = 'white'
-                    barraTempo.style.bottom = '0px'
-
-                    const marcador = document.createElement('div')
-                    marcador.style.width = parseInt(percentage) + '%'
-                    marcador.style.height = '10px'
-                    marcador.style.backgroundColor = 'orange'
-                    barraTempo.appendChild(marcador)
-                    thumbEpi.appendChild(barraTempo)
-                }
-            })
-        }
-    }
-
-
+if (!isDBExists()) {
+  _createDB();
 }
 
-initEpisode();
+const animes = _getAnimes();
+
+const target = document.querySelector("body");
+
+const observer = new MutationObserver((mutation) => {
+  const isEpisodePageData = _getPageData();
+  let DB = _getDB();
+  let ITEMS = [];
+  let ANIME = null;
+
+  /**
+   *  Validate if its an episode page
+   *  @isEpisodePageData
+   */
+
+  if (isEpisodePageData) {
+    /**
+     *  Search anime
+     *  @searchAnime
+     */
+
+    const searchAnime = DB.animes.find(
+      (item) => item.name === isEpisodePageData.animeName
+    );
+
+    if (!searchAnime) {
+      /**
+       *  Create anime register
+       *  @anime
+       */
+
+      const anime = _saveAnime(
+        isEpisodePageData.animeName,
+        isEpisodePageData.animeUrl
+      );
+
+      if (anime) {
+        /**
+         *  Create episode register
+         *  @episode
+         */
+
+        ANIME = anime;
+
+        _saveEpisode(anime, {
+          name: isEpisodePageData.episodeName,
+          url: isEpisodePageData.episodeUrl,
+          deleted_at: null,
+        });
+      }
+    }
+
+    if (searchAnime) {
+      ANIME = searchAnime;
+      const episodes = DB.episodes.filter(
+        (item) => item.anime_id === searchAnime.id
+      );
+
+      const searchEpisode = episodes.find(
+        (item) => item.name === isEpisodePageData.episodeName
+      );
+
+      if (!searchEpisode) {
+        /**
+         *  Create episode register
+         *  @episode
+         */
+
+        _saveEpisode(searchAnime, {
+          name: isEpisodePageData.episodeName,
+          url: isEpisodePageData.episodeUrl,
+          deleted_at: null,
+        });
+      }
+    }
+  }
+
+  DB = _getDB();
+
+  /**
+   *  Add items (Animes or Episodes)
+   *  @ITEMS
+   */
+
+  const pathName = window.location.pathname;
+
+  if (pathName.indexOf("watch") !== -1 && ANIME) {
+    ITEMS = DB.episodes.filter((item) => item.anime_id === ANIME.id);
+  }
+
+  if (pathName.indexOf("watch") === -1) {
+    ITEMS = DB.animes;
+  }
+
+  _createSideMenu(ITEMS);
+});
+
+observer.observe(target, { attributes: true, childList: true, subtree: true });
